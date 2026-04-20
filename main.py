@@ -7,6 +7,7 @@ from dataset import ObjDetectionDataset
 from torch.utils.data import DataLoader
 from model import build_model
 
+
 def collate(batch):
     images, targets = zip(*batch)
     return list(images), list(targets)
