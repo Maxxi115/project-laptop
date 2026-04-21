@@ -1,25 +1,24 @@
 import argparse
 
+
 def get_args():
     parser = argparse.ArgumentParser(description="Model training options")
+    parser.add_argument("--img_dir", type=str, default="./images", help="Path to raw images")
+    parser.add_argument("--label_dir", type=str, default="./labels", help="Path to raw labels")
 
-    parser.add_argument('--backbone', type=str, default='fasterrcnn_resnet50_fpn', choices=['fasterrcnn_resnet50_fpn', 'fasterrcnn_mobilenet_v3'])
-
-    parser.add_argument('--csv_dir', type=str, default='CSVs')
-
-    parser.add_argument('--num_classes', type=int, default= 1)
-
-    parser.add_argument('--image_size', type=int, default=512)
-
-    parser.add_argument('--out_dir', type=str, default='./sessions')
-
-    parser.add_argument('--batch_size', type=int, default=8,
-                        choices=[8, 16, 32, 64])
-    
-    parser.add_argument('--epochs', type=int, default=90)
-
-    parser.add_argument('--lr', type=float, default=0.001)
-
-    parser.add_argument('--wd', type=float, default=1e-4)
+    parser.add_argument(
+        "--backbone",
+        type=str,
+        default="fasterrcnn_resnet50_fpn",
+        choices=["fasterrcnn_resnet50_fpn", "fasterrcnn_mobilenet_v3"],
+    )
+    parser.add_argument("--csv_dir", type=str, default="CSVs")
+    parser.add_argument("--num_classes", type=int, default=1)
+    parser.add_argument("--image_size", type=int, default=512)
+    parser.add_argument("--out_dir", type=str, default="./sessions")
+    parser.add_argument("--batch_size", type=int, default=8, choices=[8, 16, 32, 64])
+    parser.add_argument("--epochs", type=int, default=10)
+    parser.add_argument("--lr", type=float, default=0.001)
+    parser.add_argument("--wd", type=float, default=1e-4)
 
     return parser.parse_args()
