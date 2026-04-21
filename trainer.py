@@ -4,18 +4,43 @@ import torch
 import torch.optim as optim
 import matplotlib.pyplot as plt  
 
-def train_model(model, train_loader, val_loader, device):
-    args = get_args()
+
+def validate_model(model, val_loader, device):
+    val_loss_sum = 0.0
+    val_count = 0
+
+    with torch.no_grad():
+        for images, targets in val_loader:
+            images = [image.to(device=device, dtype=torch.float32) for image in images]
+            targets = [
+                {
+                    'boxes': target['boxes'].to(device=device, dtype=torch.float32),
+                    'labels': target['labels'].to(device=device, dtype=torch.int64)
+                }
+                for target in targets
+            ]
+
+            loss_dict = model(images, targets)
+            loss = sum(loss_value for loss_value in loss_dict.values())
+
+            val_loss_sum += loss.item() * len(images)
+            val_count += len(images)
+
+    val_epoch_loss = val_loss_sum / val_count if val_count > 0 else 0.0
+    return val_epoch_loss
+
+
+
+def train_model(model, train_loader, val_loader, device, args):
     model = model.to(device)
     
     optimizer = optim.Adam(model.parameters(), lr=args.lr, weight_decay=args.wd)
     best_val_loss = float('inf')
-
     
     history_train_losses = []
     history_val_losses = []
 
-    for epoch in range(args.epochs):
+    for epoch in range(args.epochs): 
         
         model.train()
         running_loss = 0.0
@@ -45,12 +70,11 @@ def train_model(model, train_loader, val_loader, device):
         
         val_loss = validate_model(model, val_loader, device)
 
-        
+       
         print(f"Epoch {epoch + 1}/{args.epochs} | "
               f"Train Loss: {train_epoch_loss:.4f} | "
               f"Val Loss: {val_loss:.4f}")
 
-        
         history_train_losses.append(train_epoch_loss)
         history_val_losses.append(val_loss)
 
@@ -65,40 +89,14 @@ def train_model(model, train_loader, val_loader, device):
     plt.figure(figsize=(10, 6))
     plt.plot(epochs_range, history_train_losses, label='Training Loss', marker='o')
     plt.plot(epochs_range, history_val_losses, label='Validation Loss', marker='s')
-    
+    best_val_loss = min(history_val_losses)
+    best_epoch_idx = history_val_losses.index(best_val_loss)
+    best_epoch = epochs_range[best_epoch_idx]
     plt.title('Learning Curve: Training vs Validation Loss')
     plt.xlabel('Epochs')
     plt.ylabel('Loss')
     plt.legend()
     plt.grid(True)
     
-    
     plt.savefig('learning_curve.png')
     print("Learning curve saved as 'learning_curve.png'")
-
-
-def validate_model(model, val_loader, device):
-
-    val_loss_sum = 0.0
-    val_count = 0
-
-    with torch.no_grad():
-        for images, targets in val_loader:
-
-            images = [image.to(device=device, dtype=torch.float32) for image in images]
-            targets = [
-                {
-                    'boxes': target['boxes'].to(device=device, dtype=torch.float32),
-                    'labels': target['labels'].to(device=device, dtype=torch.int64)
-                }
-                for target in targets
-            ]
-
-            loss_dict = model(images, targets)
-            loss = sum(loss_value for loss_value in loss_dict.values())
-
-            val_loss_sum += loss.item() * len(images)
-            val_count += len(images)
-
-    val_epoch_loss = val_loss_sum / val_count
-    return val_epoch_loss
